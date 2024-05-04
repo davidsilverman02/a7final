@@ -888,6 +888,7 @@ int run_server() {
     bool waiting = false;
     bool hasPrintedWaiting = false;
     bool approveRestart = false;
+    bool restarted = false;
 
     int yad = 12;
     int rotations = 1;
@@ -924,6 +925,7 @@ int run_server() {
             waiting = false;
             hasPrintedWaiting = false;
             approveRestart = false;
+            restarted = true;
         }
 
         if (hasReceivedMove)
@@ -981,7 +983,8 @@ int run_server() {
 
         int nbytes_recvd = conn_sock->Recv(buffer, sizeof(buffer));
         if (nbytes_recvd == 0) {
-            fprintf(stderr, "BLEHHH");
+            system("cls");
+            fprintf(stderr, "Client hang up");
             quit = true;
         }
         else if (nbytes_recvd == -1)
@@ -1008,9 +1011,12 @@ int run_server() {
                     bort.printMaze();
                     break;
                 case 'y':
-                    std::cout << "Client wants restart" << std::endl;
-                    std::cout << "Press y to restart, n to stop" << std::endl;
-                    waiting = true;
+                    if (!restarted)
+                    {
+                        std::cout << "Client wants restart" << std::endl;
+                        std::cout << "Press y to restart, n to stop" << std::endl;
+                        waiting = true;
+                    }
                     break;
                 case 'n':
                     quit = true;
@@ -1034,6 +1040,9 @@ int run_server() {
                     }
                     else
                     {
+                        system("cls");
+                        std::cout << bort.playing(true) << std::endl;
+                        bort.printMaze();
                         serverLose = true;
                     }
                 }
@@ -1104,6 +1113,7 @@ int run_server() {
             }
         }
 
+        restarted = false;
 
         auto time_in_seconds = std::chrono::time_point_cast<std::chrono::seconds>(std::chrono::system_clock::now());
         ++frame_count_per_second;
@@ -1243,22 +1253,22 @@ int run_client() {
 
         if (canPlay)
         {
-            if (GetAsyncKeyState(VK_LEFT) && bort.canMoveWest(bort.clientPos))
+            if (GetKeyState(VK_LEFT) & 0x80 && bort.canMoveWest(bort.clientPos))
             {
                 bort.moveWest();
                 newInput = true;
             }
-            else if (GetAsyncKeyState(VK_RIGHT) && bort.canMoveEast(bort.clientPos))
+            else if (GetKeyState(VK_RIGHT) & 0x80 && bort.canMoveEast(bort.clientPos))
             {
                 bort.moveEast();
                 newInput = true;
             }
-            else if (GetAsyncKeyState(VK_UP) && bort.canMoveNorth(bort.clientPos))
+            else if (GetKeyState(VK_UP) & 0x80 && bort.canMoveNorth(bort.clientPos))
             {
                 bort.moveNorth();
                 newInput = true;
             }
-            else if (GetAsyncKeyState(VK_DOWN) && bort.canMoveSouth(bort.clientPos))
+            else if (GetKeyState(VK_DOWN) & 0x80 && bort.canMoveSouth(bort.clientPos))
             {
                 bort.moveSouth();
                 newInput = true;
